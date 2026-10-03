@@ -1,0 +1,51 @@
+name: Build UnlockerIsland
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build (Release | x64)
+    runs-on: windows-2022
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Downgrade toolset v145 -> v143
+        shell: pwsh
+        run: |
+          Get-ChildItem -Recurse -Filter *.vcxproj | ForEach-Object {
+            (Get-Content $_.FullName -Raw) -replace 'v145', 'v143' |
+              Set-Content $_.FullName -NoNewline
+            Write-Host "Patched: $($_.FullName)"
+          }
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Build solution
+        run: msbuild FufuLauncher.UnlockerIsland.sln /m /p:Configuration=Release /p:Platform=x64
+
+      - name: Collect artifacts
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path artifacts | Out-Null
+          Get-ChildItem -Recurse -Include *.dll,*.exe |
+            Where-Object { $_.FullName -notmatch '\\artifacts\\' } |
+            ForEach-Object {
+              Write-Host "Found: $($_.FullName)"
+              Copy-Item $_.FullName artifacts\ -Force
+            }
+          Get-ChildItem artifacts
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: UnlockerIsland-Release-x64
+          path: artifacts/**
+          if-no-files-found: error
