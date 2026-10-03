@@ -1,4 +1,4 @@
-﻿/*
+/*
 Copyright (c) FufuLauncher Dev Team. All rights reserved.
 Licensed under the AGPL-3.0 License.
 */
@@ -22,7 +22,6 @@ Licensed under the AGPL-3.0 License.
 #include "../FreeCamera/FreeCamera.h"
 #include "../Camera/Camera.h"
 #include "../CameraOffset/CameraOffset.h"
-#include "../CameraTweaks/CameraTweaks.h"
 #include "../PaimonFollow/PaimonFollow.h"
 #include <iostream>
 #include <atomic>
@@ -504,11 +503,9 @@ int32_t WINAPI hk_ChangeFov(void* __this, float value) {
     }
 
     if (isFocused && cfg.enable_auto_cook && (GetAsyncKeyState(cfg.auto_cook_key) & 0x8000) && now - g_LastCookTime > 300) {
-        if (canOpenUI) {
-            g_TrigCook = true;
-            g_LastCookTime = now;
-            std::cout << "[Hotkey] Auto Cook function triggered." << std::endl;
-        }
+        g_TrigCook = true;
+        g_LastCookTime = now;
+        std::cout << "[Hotkey] Auto Cook function triggered." << std::endl;
     }
     if (isFocused && cfg.enable_auto_expedition && (GetAsyncKeyState(cfg.auto_expedition_key) & 0x8000) && now - g_LastExpTime > 300) {
         if (canOpenUI) {
@@ -828,8 +825,6 @@ bool Hooks::Init() {
     Camera::Init();
     CameraOffset::Init();
     FreeCamera::Init();
-
-    CameraTweaks::Init();
 
     PaimonFollow::Init();
     
